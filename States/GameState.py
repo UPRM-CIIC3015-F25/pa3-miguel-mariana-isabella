@@ -816,5 +816,37 @@ class GameState(State):
     #   iterations (no for/while loops) — the recursion itself must handle repetition. After the
     #   recursion finishes, reset card selections, clear any display text or tracking lists, and
     #   update the visual layout of the player's hand.
+    # TASK 4 – RECURSIVE DISCARDING (NO LOOPS)
     def discardCards(self, removeFromHand: bool):
-        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+
+        # --- BASE CASE: no cards selected ---
+        if not self.selectedCards:
+            # refill hand back to 8
+            missing = 8 - len(self.hand)
+
+            if missing > 0:
+                new_cards = self.deckManager.dealCards(self.cards, missing, self.subLevel)
+                self.hand.extend(new_cards)
+
+            # clean up all UI selections/text
+            self.selectedCards = []
+            self.displayedTxtList = []
+            self.selectedCombo = []
+            self.selectedRanks = []
+            self.selectedSuits = []
+            self.curPlayedHand = None
+
+            # refresh visuals
+            self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+            return
+
+        # --- RECURSIVE STEP: remove ONE selected card ---
+        card = self.selectedCards[0]  # take first selected card
+        if removeFromHand and card in self.hand:
+            self.hand.remove(card)
+
+        # remove card from selection
+        self.selectedCards.pop(0)
+
+        # recursive call — continues discarding until list is empty
+        self.discardCards(removeFromHand)
