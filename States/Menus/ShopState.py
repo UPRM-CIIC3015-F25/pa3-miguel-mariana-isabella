@@ -115,7 +115,7 @@ class ShopState(State):
         target_text = planet.description.replace("levels up", "").strip()
 
         for hand_name in HAND_SCORES:
-            if hand_name == target_text:
+            if hand_name == target_te[xt:
                 HAND_SCORES[hand_name]["chips"] += planet.chip_bonus
                 HAND_SCORES[hand_name]["multiplier"] += planet.mult_bonus
                 HAND_SCORES[hand_name]["level"] += 1
