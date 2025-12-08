@@ -10,59 +10,54 @@ from Cards.Card import Card, Rank
 #   and flags to determine if the hand is: "Four of a Kind", "Full House", "Flush", "Straight", "Three of a Kind",
 #   "Two Pair", "One Pair", or "High Card". Return a string with the correct hand type at the end.
 def evaluate_hand(hand: list[Card]):
+    # ---------------- Collect ranks and suits ----------------
     rank_counts = {}
     suit_counts = {}
 
+    ranks = []
+    suits = []
+
     for card in hand:
-        rank = card.rank.value if isinstance(card.rank, Rank) else card.rank
-        suit = card.suit
-
-        rank_counts[rank] = rank_counts.get(rank,0) + 1
-        suit_counts[suit] = suit_counts.get(suit,0) + 1
-
-        count_values = sorted(rank_counts.values(), reverse=True)
-
-        flush_suit = None
-        for s, count in suit_counts.items():
-            if count > 5:
-                flush_suit = s
-                break
-        is_flush = flush_suit is not None
+        r = card.rank
+        s = card.suit
+        ranks.append(r)
+        suits.append(s)
 
 
-        if 14 in unique_ranks:
-            unique_ranks.append(1)
+        rank_counts[r] = rank_counts.get(r, 0) + 1
+
+        suit_counts[s] = suit_counts.get(s, 0) + 1
 
 
-        def has_straight(ranks):
-            if len(ranks) < 5:
-                return False
-        consecutive = 1
-        for i in range(1,len(ranks)):
-            if ranks[i] == ranks[i-1] + 1:
-                consecutive += 1
-                if consecutive >= 5:
-                    return True
-            else:
-                consecutive = 1
-        return False
-
-    is_straight = has_straight(unique_ranks)
-
-    if is_flush:
-        suited_cards = [card for card in hand if card.suit == flush_suit]
-        suited_ranks = sorted({c.rank.value if isinstance(c.rank, Rank) else c.rank
-                           for c in suited_cards})
-        if 14 in suited_ranks:
-            suited_ranks.append(1)
-        if has_straight(suited_ranks):
-            return "Straight Flush"
+    sorted_counts = sorted(rank_counts.values(), reverse=True)
 
 
-    if count_values[0] == 4:
-        return "Four of a kind"
+    is_flush = any(count >= 5 for count in suit_counts.values())
 
-    if count_values[0] == 3 and count_values[1] >= 2:
+
+    unique_ranks = sorted(set(ranks))
+
+
+    if 14 in unique_ranks:
+        unique_ranks.append(1)
+        unique_ranks = sorted(set(unique_ranks))
+
+    is_straight = False
+    for i in range(len(unique_ranks) - 4):
+        window = unique_ranks[i:i+5]
+        if window == list(range(window[0], window[0] + 5)):
+            is_straight = True
+            break
+
+
+    if is_straight and is_flush:
+        return "Straight Flush"
+
+
+    if sorted_counts[0] == 4:
+        return "Four of a Kind"
+
+    if sorted_counts[0] == 3 and sorted_counts[1] >= 2:
         return "Full House"
 
     if is_flush:
@@ -71,14 +66,13 @@ def evaluate_hand(hand: list[Card]):
     if is_straight:
         return "Straight"
 
-    if count_values[0] == 3:
+    if sorted_counts[0] == 3:
         return "Three of a Kind"
 
-
-    if count_values[0] == 2 and count_values[1] == 2:
+    if sorted_counts[0] == 2 and sorted_counts[1] == 2:
         return "Two Pair"
 
-    if count_values[0] == 2:
+    if sorted_counts[0] == 2:
         return "One Pair"
 
     return "High Card"
@@ -91,5 +85,4 @@ def evaluate_hand(hand: list[Card]):
 
 
 
-    return "High Card" # If none of the above, it's High Card
 

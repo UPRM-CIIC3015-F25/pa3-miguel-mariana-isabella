@@ -4,8 +4,8 @@ from States.Core.StateClass import State
 
 #---------- Debug Overlay State ----------
 class DebugState(State):
-    def __init__(self, nextState: str = "", game_state=None):
-        super().__init__(nextState)
+    def __init__(self, nextstate: str = "", game_state=None):
+        super().__init__(nextstate)
         self.game_state = game_state
         self.visible = False  # Whether the debug UI is shown
 
@@ -79,14 +79,14 @@ class DebugState(State):
             player = self.game_state.playerInfo
             lm = player.levelManager
             if lm is not None:
-                subLevel = lm.curSubLevel
-                if subLevel is not None:
+                sublevel = lm.curSubLevel
+                if sublevel is not None:
                     # use bossLevel if present, otherwise blind name; guard with getattr
-                    boss = subLevel.bossLevel
+                    boss = sublevel.bossLevel
                     if boss:
                         current_level = boss
                     else:
-                        current_level = subLevel.blind.name
+                        current_level = sublevel.blind.name
                         if current_level is not None:
                             current_level = current_level.capitalize()
         txt_level_label = self.smallFont.render("Current level:", True, (255, 255, 255))
@@ -122,10 +122,10 @@ class DebugState(State):
 
                 if self.game_state:
                     player = self.game_state.playerInfo
-                    levelManager = player.levelManager
-                    if levelManager.curSubLevel is not None:
-                        player.roundScore = levelManager.curSubLevel.score
-                        levelManager.update()
+                    levelmanager = player.levelManager
+                    if levelmanager.curSubLevel is not None:
+                        player.roundScore = levelmanager.curSubLevel.score
+                        levelmanager.update()
                     else:
                         player.levelFinished = True
 

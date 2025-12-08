@@ -27,5 +27,5 @@ class State(ABC):
         pass
 
     @abstractmethod
-    def userInput(self, events):
+    def userinput(self, events):
         pass
