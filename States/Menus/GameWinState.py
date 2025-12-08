@@ -3,8 +3,8 @@ from States.Core.StateClass import State
 
 
 class GameWinState(State):
-    def __init__(self, nextState: str = ""):
-        super().__init__(nextState)
+    def __init__(self, nextstate: str = ""):
+        super().__init__(nextstate)
         # Fonts
         self.title_font = pygame.font.Font('Graphics/Text/m6x11.ttf', 48)
         self.btn_font = pygame.font.Font('Graphics/Text/m6x11.ttf', 28)
