@@ -4,13 +4,13 @@ from States.Core.StateClass import State
 from States.Core.PlayerInfo import PlayerInfo
 
 class LevelSelectState(State):
-    def __init__(self, playerInfo: PlayerInfo = None, nextState: str = "", deckManager: DeckManager = None):
-        super().__init__(nextState)
+    def __init__(self, playerinfo: PlayerInfo = None, nextstate: str = "", deckmanager: DeckManager = None):
+        super().__init__(nextstate)
         
         #--------------------Player Info and Screenshot---------------------------
-        self.playerInfo = playerInfo # PlayerInfo object
+        self.playerInfo = playerinfo # PlayerInfo object
         self.bg = State.screenshot # Screenshot of the last game state
-        self.deckManager = deckManager # DeckManager object
+        self.deckManager = deckmanager # DeckManager object
 
         # -------------------Load CRT Overlay-------------------------------------
         self.tvOverlay = pygame.image.load('Graphics/Backgrounds/CRT.png').convert_alpha()
@@ -30,7 +30,7 @@ class LevelSelectState(State):
         self.cardsStartY = 150
         
         # Store card rects for each sublevel
-        self.sublevelCards = []
+        self.sublevelcards = []
         
         self.continueButtonRect = pygame.Rect(0, 0, 300, 80)
         self.continueButtonRect.centerx = 650
@@ -50,8 +50,8 @@ class LevelSelectState(State):
         self.screen.blit(overlay, (0, 0))
         
         # Draw level Cards and continue button
-        self.drawLevelCards()
-        self.drawContinueButton()
+        self.drawlevelcards()
+        self.drawcontinuebutton()
         
         # CRT overlay effect
         self.screen.blit(self.tvOverlay, (0, 0))
@@ -62,12 +62,12 @@ class LevelSelectState(State):
     The player score resets to 0, and the target score is updated, if the next level is a
     boss level, it will reset stats according to the boss's rules."""
     
-    def userInput(self, events):
+    def userinput(self, events):
     # Handle mouse click on CONTINUE button
         if events.type == pygame.MOUSEBUTTONDOWN and events.button == 1:
-            mousePos = events.pos
+            mousepos = events.pos
             # Check if the continue button was clicked
-            if self.continueButtonRect.collidepoint(mousePos):
+            if self.continueButtonRect.collidepoint(mousepos):
                 # Update level manager to reflect completed sublevel
                 self.playerInfo.levelFinished = False
                 
@@ -90,25 +90,64 @@ class LevelSelectState(State):
                 #   on which boss is active.
                 #   Finally, make sure to reset the player’s round score to 0 at the end of this setup.
                 #   Avoid unnecessary repetition—use clear condition structure to make the logic readable.
+
+
+                self.playerInfo.triggerFaceDownFirstHand = False
+                self.playerInfo.triggerFaceDownFaces = False
+                self.playerInfo.triggerHook = False
+                self.playerInfo.scoreModifier = 1.0
+                self.playerInfo.disableStraights = False
+
+                # -----------------------------------------
+                # 2. Apply boss effect based on boss name
+                # -----------------------------------------
+                boss = lm.curSubLevel.bossName
+
+                if boss == "The Mark":
+                    self.playerInfo.triggerFaceDownFaces = True
+
+                elif boss == "The Needle":
+                    self.playerInfo.handLimit = 1
+
+                elif boss == "The House":
+                    self.playerInfo.triggerFaceDownFirstHand = True
+
+                elif boss == "The Hook":
+                    self.playerInfo.triggerHook = True
+
+                elif boss == "The Water":
+                    self.playerInfo.discardLimit = 0
+
+                elif boss == "The Manacle":
+                    self.playerInfo.handLimit -= 1
+
+                elif boss == "The Club":
+                    self.playerInfo.scoreModifier = 0.75
+
+                elif boss == "The Goad":
+                    self.playerInfo.disableStraights = True
+
+
+                self.playerInfo.handLimit = max(1, self.playerInfo.handLimit)
+                self.playerInfo.discardLimit = max(0, self.playerInfo.discardLimit)
+
                 self.playerInfo.roundScore = 0
+
                 
-                # Set target score for the new sublevel
-                self.playerInfo.score = self.playerInfo.levelManager.curSubLevel.score
-                
-                # Prepare for the nextState : GameState
+
                 self.deckManager.resetDeck = True
                 self.isFinished = True
                 self.nextState = "GameState"
                 self.buttonSound.play()
 
-    def drawLevelCards(self):
+    def drawlevelcards(self):
         # Make sure there's a current level
         if self.playerInfo.levelManager.curLevel is None:
             return
         # Get current sublevel list of the player's ante
         sublevels = self.playerInfo.levelManager.curLevel
         # Clear previous card rects
-        self.sublevelCards = []
+        self.sublevelcards = []
 
         # Dict of boss with their abilities
         # TODO (TASK 9.1) - Define a dictionary called `boss_abilities` that maps each Boss Blind’s name to its special effect.
@@ -116,7 +155,14 @@ class LevelSelectState(State):
         #   what unique restriction or ability that boss applies during the round.
         #   This dictionary will later be used to look up and apply special effects based on which boss is active.
         boss_abilities = {
-
+            "The Mark": "All Face cards are drawn face down.",
+            "The Needle": "Play only 1 hand.",
+            "The House": "First hand is drawn face down.",
+            "The Hook": "Discards 2 random cards held in hand after every played hand.",
+            "The Water": "Start with 0 discards.",
+            "The Manacle": "-1 hand size.",
+            "The Club": "All scoring chips reduced by 25%.",
+            "The Goad": "Straights cannot be played this round."
         }
 
         # Dict of boss with their color schemes
@@ -134,22 +180,22 @@ class LevelSelectState(State):
 
         #---------------------------Draw each sublevel card ---------------------------
         for i, sublevel in enumerate(sublevels):
-            cardX = self.cardsStartX + i * (self.cardWidth + self.cardSpacing)
-            cardY = self.cardsStartY
+            cardx = self.cardsStartX + i * (self.cardWidth + self.cardSpacing)
+            cardy = self.cardsStartY
             
-            cardSurface = pygame.Surface((self.cardWidth, self.cardHeight), pygame.SRCALPHA)
+            cardsurface = pygame.Surface((self.cardWidth, self.cardHeight), pygame.SRCALPHA)
             
-            cardRect = pygame.Rect(cardX, cardY, self.cardWidth, self.cardHeight)
-            self.sublevelCards.append({
-                'rect': cardRect,
+            cardrect = pygame.Rect(cardx, cardy, self.cardWidth, self.cardHeight)
+            self.sublevelcards.append({
+                'rect': cardrect,
                 'sublevel': sublevel
             })
             
             # Sections of the card
-            headerRect = pygame.Rect(10, 10, self.cardWidth - 20, 50)
-            blindImageRect = pygame.Rect(10, 70, self.cardWidth - 20, 140)
-            scoreRect = pygame.Rect(10, 220, self.cardWidth - 20, 80)
-            statusRect = pygame.Rect(10, 310, self.cardWidth - 20, 60)
+            headerrect = pygame.Rect(10, 10, self.cardWidth - 20, 50)
+            blindimagerect = pygame.Rect(10, 70, self.cardWidth - 20, 140)
+            scorerect = pygame.Rect(10, 220, self.cardWidth - 20, 80)
+            statusrect = pygame.Rect(10, 310, self.cardWidth - 20, 60)
             
             # Header and background colors by blind type
             if sublevel.blind.name == "SMALL":
@@ -169,104 +215,104 @@ class LevelSelectState(State):
                 if override:
                     header_color, bg_color = override
             
-            pygame.draw.rect(cardSurface, bg_color, cardSurface.get_rect(), border_radius=10)
-            pygame.draw.rect(cardSurface, header_color, headerRect, border_radius=10)
-            pygame.draw.rect(cardSurface, (30, 30, 30), blindImageRect, border_radius=10)
-            pygame.draw.rect(cardSurface, (30, 30, 30), scoreRect, border_radius=10)
+            pygame.draw.rect(cardsurface, bg_color, cardsurface.get_rect(), border_radius=10)
+            pygame.draw.rect(cardsurface, header_color, headerrect, border_radius=10)
+            pygame.draw.rect(cardsurface, (30, 30, 30), blindimagerect, border_radius=10)
+            pygame.draw.rect(cardsurface, (30, 30, 30), scorerect, border_radius=10)
             
             # Header Text
             if sublevel.bossLevel:
-                headerText = self.font.render(f"BOSS: {sublevel.bossLevel.upper()}", False, (255, 255, 255))
+                headertext = self.font.render(f"BOSS: {sublevel.bossLevel.upper()}", False, (255, 255, 255))
             else:
-                headerText = self.font.render(f"{sublevel.blind.name} BLIND", False, (255, 255, 255))
-            headerTextRect = headerText.get_rect(center=headerRect.center)
-            cardSurface.blit(headerText, headerTextRect)
+                headertext = self.font.render(f"{sublevel.blind.name} BLIND", False, (255, 255, 255))
+            headertextrect = headertext.get_rect(center=headerrect.center)
+            cardsurface.blit(headertext, headertextrect)
             
             # Blind image
             if sublevel.image:
-                scaledImage = pygame.transform.scale(sublevel.image, (140, 120))
-                imageRect = scaledImage.get_rect(center=blindImageRect.center)
-                cardSurface.blit(scaledImage, imageRect)
+                scaledimage = pygame.transform.scale(sublevel.image, (140, 120))
+                imagerect = scaledimage.get_rect(center=blindimagerect.center)
+                cardsurface.blit(scaledimage, imagerect)
             
             # Score requirement
-            scoreLabel = self.font2.render("Score at least", False, (200, 200, 200))
-            scoreValue = self.font3.render(str(sublevel.score), False, (255, 0, 0))
-            scoreLabelRect = scoreLabel.get_rect(centerx=scoreRect.centerx, top=scoreRect.top + 12)
-            scoreValueRect = scoreValue.get_rect(centerx=scoreRect.centerx, top=scoreRect.top + 40)
-            cardSurface.blit(scoreLabel, scoreLabelRect)
-            cardSurface.blit(scoreValue, scoreValueRect)
+            scorelabel = self.font2.render("Score at least", False, (200, 200, 200))
+            scorevalue = self.font3.render(str(sublevel.score), False, (255, 0, 0))
+            scorelabelrect = scorelabel.get_rect(centerx=scorerect.centerx, top=scorerect.top + 12)
+            scorevaluerect = scorevalue.get_rect(centerx=scorerect.centerx, top=scorerect.top + 40)
+            cardsurface.blit(scorelabel, scorelabelrect)
+            cardsurface.blit(scorevalue, scorevaluerect)
 
             # Boss ability Text
             ability_text = None
             if sublevel.bossLevel: 
                 ability_text = boss_abilities.get(sublevel.bossLevel)
             
-            nextUnfinished = self.playerInfo.levelManager.next_unfinished_sublevel()
+            nextunfinished = self.playerInfo.levelManager.next_unfinished_sublevel()
             
             if sublevel.finished:
                 # COMPLETED
-                statusText = self.font4.render("COMPLETED", False, (100, 255, 100))
-                statusTextRect = statusText.get_rect(center=statusRect.center)
-                cardSurface.blit(statusText, statusTextRect)
+                statustext = self.font4.render("COMPLETED", False, (100, 255, 100))
+                statustextrect = statustext.get_rect(center=statusrect.center)
+                cardsurface.blit(statustext, statustextrect)
                 
-                darkOverlay = pygame.Surface((self.cardWidth, self.cardHeight), pygame.SRCALPHA)
-                darkOverlay.fill((0, 0, 0, 160))
-                cardSurface.blit(darkOverlay, (0, 0))
-            elif nextUnfinished and nextUnfinished == sublevel:
+                darkoverlay = pygame.Surface((self.cardWidth, self.cardHeight), pygame.SRCALPHA)
+                darkoverlay.fill((0, 0, 0, 160))
+                cardsurface.blit(darkoverlay, (0, 0))
+            elif nextunfinished and nextunfinished == sublevel:
                 # ACTIVE
-                statusText = self.font4.render("ACTIVE", False, (255, 200, 100))
-                statusTextRect = statusText.get_rect(center=statusRect.center)
-                cardSurface.blit(statusText, statusTextRect)
+                statustext = self.font4.render("ACTIVE", False, (255, 200, 100))
+                statustextrect = statustext.get_rect(center=statusrect.center)
+                cardsurface.blit(statustext, statustextrect)
             else:
                 # LOCKED
-                statusText = self.font4.render("LOCKED", False, (150, 150, 150))
-                statusTextRect = statusText.get_rect(center=statusRect.center)
-                cardSurface.blit(statusText, statusTextRect)
+                statustext = self.font4.render("LOCKED", False, (150, 150, 150))
+                statustextrect = statustext.get_rect(center=statusrect.center)
+                cardsurface.blit(statustext, statustextrect)
                 
-                lockOverlay = pygame.Surface((self.cardWidth, self.cardHeight), pygame.SRCALPHA)
-                lockOverlay.fill((0, 0, 0, 80))
-                cardSurface.blit(lockOverlay, (0, 0))
+                lockoverlay = pygame.Surface((self.cardWidth, self.cardHeight), pygame.SRCALPHA)
+                lockoverlay.fill((0, 0, 0, 80))
+                cardsurface.blit(lockoverlay, (0, 0))
             
             # Boss ability description
             if ability_text:
-                abilityFont = self.font
-                abilitySurf = abilityFont.render(ability_text, False, (245, 245, 245))
+                abilityfont = self.font
+                abilitysurf = abilityfont.render(ability_text, False, (245, 245, 245))
                 # place just below the status rect
-                abilityRect = abilitySurf.get_rect(centerx=scoreRect.centerx, top=statusRect.top + statusRect.height + 8)
+                abilityrect = abilitysurf.get_rect(centerx=scorerect.centerx, top=statusrect.top + statusrect.height + 8)
                 pad_x, pad_y = 12, 8
-                bg_rect = abilityRect.inflate(pad_x * 2, pad_y * 2)
+                bg_rect = abilityrect.inflate(pad_x * 2, pad_y * 2)
                 panel = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
                 panel_color = (header_color[0], header_color[1], header_color[2], 200)
                 panel.fill(panel_color)
-                cardSurface.blit(panel, bg_rect.topleft)
-                cardSurface.blit(abilitySurf, abilityRect)
+                cardsurface.blit(panel, bg_rect.topleft)
+                cardsurface.blit(abilitysurf, abilityrect)
 
             # Border by status
-            if nextUnfinished and nextUnfinished == sublevel:
-                borderColor = (255, 200, 100)
-                borderWidth = 4
+            if nextunfinished and nextunfinished == sublevel:
+                bordercolor = (255, 200, 100)
+                borderwidth = 4
             elif sublevel.finished:
-                borderColor = (100, 255, 100)
-                borderWidth = 3
+                bordercolor = (100, 255, 100)
+                borderwidth = 3
             else:
-                borderColor = (80, 80, 80)
-                borderWidth = 2
+                bordercolor = (80, 80, 80)
+                borderwidth = 2
             
-            pygame.draw.rect(cardSurface, borderColor, cardSurface.get_rect(), width=borderWidth, border_radius=10)
-            self.screen.blit(cardSurface, (cardX, cardY))
+            pygame.draw.rect(cardsurface, bordercolor, cardsurface.get_rect(), width=borderwidth, border_radius=10)
+            self.screen.blit(cardsurface, (cardx, cardy))
 
-    def drawContinueButton(self):
+    def drawcontinuebutton(self):
         #--- Draw CONTINUE Button ---
         mouse = pygame.mouse.get_pos()
         hover = self.continueButtonRect.collidepoint(mouse)
         
         if hover:
-            buttonColor = (0, 139, 0)
+            buttoncolor = (0, 139, 0)
         else:
-            buttonColor = (0, 128, 0)
+            buttoncolor = (0, 128, 0)
 
-        pygame.draw.rect(self.screen, buttonColor, self.continueButtonRect, border_radius=10)
+        pygame.draw.rect(self.screen, buttoncolor, self.continueButtonRect, border_radius=10)
         
-        continueText = self.font.render("CONTINUE", False, (255, 255, 255))
-        continueTextRect = continueText.get_rect(center=self.continueButtonRect.center)
-        self.screen.blit(continueText, continueTextRect)
+        continuetext = self.font.render("CONTINUE", False, (255, 255, 255))
+        continuetextrect = continuetext.get_rect(center=self.continueButtonRect.center)
+        self.screen.blit(continuetext, continuetextrect)
