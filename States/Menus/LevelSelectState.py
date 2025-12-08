@@ -62,7 +62,7 @@ class LevelSelectState(State):
     The player score resets to 0, and the target score is updated, if the next level is a
     boss level, it will reset stats according to the boss's rules."""
     
-    def userInput(self, events):
+    def userinput(self, events):
     # Handle mouse click on CONTINUE button
         if events.type == pygame.MOUSEBUTTONDOWN and events.button == 1:
             mousepos = events.pos
@@ -90,12 +90,51 @@ class LevelSelectState(State):
                 #   on which boss is active.
                 #   Finally, make sure to reset the player’s round score to 0 at the end of this setup.
                 #   Avoid unnecessary repetition—use clear condition structure to make the logic readable.
+
+
+                self.playerInfo.triggerFaceDownFirstHand = False
+                self.playerInfo.triggerFaceDownFaces = False
+                self.playerInfo.triggerHook = False
+                self.playerInfo.scoreModifier = 1.0
+                self.playerInfo.disableStraights = False
+
+                # -----------------------------------------
+                # 2. Apply boss effect based on boss name
+                # -----------------------------------------
+                boss = lm.curSubLevel.bossName
+
+                if boss == "The Mark":
+                    self.playerInfo.triggerFaceDownFaces = True
+
+                elif boss == "The Needle":
+                    self.playerInfo.handLimit = 1
+
+                elif boss == "The House":
+                    self.playerInfo.triggerFaceDownFirstHand = True
+
+                elif boss == "The Hook":
+                    self.playerInfo.triggerHook = True
+
+                elif boss == "The Water":
+                    self.playerInfo.discardLimit = 0
+
+                elif boss == "The Manacle":
+                    self.playerInfo.handLimit -= 1
+
+                elif boss == "The Club":
+                    self.playerInfo.scoreModifier = 0.75
+
+                elif boss == "The Goad":
+                    self.playerInfo.disableStraights = True
+
+
+                self.playerInfo.handLimit = max(1, self.playerInfo.handLimit)
+                self.playerInfo.discardLimit = max(0, self.playerInfo.discardLimit)
+
                 self.playerInfo.roundScore = 0
+
                 
-                # Set target score for the new sublevel
-                self.playerInfo.score = self.playerInfo.levelManager.curSubLevel.score
-                
-                # Prepare for the nextState : GameState
+
                 self.deckManager.resetDeck = True
                 self.isFinished = True
                 self.nextState = "GameState"
