@@ -578,25 +578,30 @@ class GameState(State):
     def SortCards(self, sort_by: str = "suit"):
         suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]         # Define the order of suits
 
-        for i in range(len(self.cards)):
-            for j in range(i + 1, len(self.cards)):
+        for i in range(len(self.hand)):
+            for j in range(i + 1, len(self.hand)):
 
-                cardA = self.cards[i]
-                cardB = self.cards[j]
+                cardA = self.hand[i]
+                cardB = self.hand[j]
+
+                should_swap = False
 
                 if sort_by == "suit":
                     if suitOrder.index(cardA.suit) > suitOrder.index(cardB.suit):
-                        self.cards[i], self.cards[j] = self.cards[j], self.cards[i]
+                        should_swap = True
                     elif cardA.suit == cardB.suit:
                         if cardA.rank.value > cardB.rank.value:
-                            self.cards[i], self.cards[j] = self.cards[j], self.cards[i]
+                            should_swap = True
 
                 elif sort_by == "rank":
                     if cardA.rank.value > cardB.rank.value:
-                        self.cards[i], self.cards[j] = self.cards[j], self.cards[i]
+                        should_swap = True
                     elif cardA.rank.value == cardB.rank.value:
                         if suitOrder.index(cardA.suit) > suitOrder.index(cardB.suit):
-                            self.cards[i], self.cards[j] = self.cards[j], self.cards[i]
+                            should_swap = True
+
+                if should_swap:
+                    self.hand[i], self.hand[j] = self.hand[j], self.hand[i]
         self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
 
     def checkHoverCards(self):
