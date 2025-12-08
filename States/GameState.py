@@ -821,12 +821,64 @@ class GameState(State):
 
         # ------------------- Apply Joker effects -------------------
         owned = set(self.playerJokers)
-        # TODO (TASK 5.2): Let the Joker mayhem begin! Implement each Joker’s effect using the Joker table as reference.
-        #   Follow this structure for consistency:
-        #   if "joker card name" in owned:
-        #       # Apply that Joker’s effect
-        #       self.activated_jokers.add("joker card name")
-        #   The last line ensures the Joker is visibly active and its effects are properly applied.
+        # ========== TASK 5.2: APPLY JOKER EFFECTS ==========
+        owned = self.playerJokers
+
+        # The Joker → +4 multiplier
+        if "The Joker" in owned:
+            hand_mult += 4
+            self.activated_jokers.add("The Joker")
+
+        # Michael Myers → random multiplier 0–23
+        if "Michael Myers" in owned:
+            bonus = random.randint(0, 23)
+            hand_mult += bonus
+            self.activated_jokers.add("Michael Myers")
+
+        # Fibonacci → each Ace/2/3/5/8 gives +8 multiplier
+        if "Fibonacci" in owned:
+            count = sum(
+                1 for c in self.cardsSelectedList if c.rank in [Rank.ACE, Rank.TWO, Rank.THREE, Rank.FIVE, Rank.EIGHT])
+            hand_mult += count * 8
+            self.activated_jokers.add("Fibonacci")
+
+        # Gauntlet → +250 chips, -2 hand size
+        if "Gauntlet" in owned:
+            total_chips += 250
+            self.maxHands -= 2
+            self.activated_jokers.add("Gauntlet")
+
+        # Ogre → +3 multiplier per owned Joker
+        if "Ogre" in owned:
+            hand_mult += 3 * len(owned)
+            self.activated_jokers.add("Ogre")
+
+        # StrawHat → +100 chips - 5 * handsPlayed
+        if "StrawHat" in owned:
+            total_chips += 100 - (self.handsPlayed * 5)
+            self.activated_jokers.add("StrawHat")
+
+        # Hog Rider → +100 chips if Straight
+        if "Hog Rider" in owned and hand_name == "Straight":
+            total_chips += 100
+            self.activated_jokers.add("Hog Rider")
+
+        # ? Block → +4 chips if exactly 4 cards
+        if "? Block" in owned and len(self.cardsSelectedList) == 4:
+            total_chips += 4
+            self.activated_jokers.add("? Block")
+
+        # Hogwarts → Each Ace = +4 mult & +20 chips
+        if "Hogwarts" in owned:
+            ace_count = sum(1 for c in self.cardsSelectedList if c.rank == Rank.ACE)
+            hand_mult += ace_count * 4
+            total_chips += ace_count * 20
+            self.activated_jokers.add("Hogwarts")
+
+        # 802 → If last hand of round, double final gain
+        if "802" in owned and self.handsRemaining == 0:
+            procrastinate = True
+            self.activated_jokers.add("802")
 
         procrastinate = False
 
