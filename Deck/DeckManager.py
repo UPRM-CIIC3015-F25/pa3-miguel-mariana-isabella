@@ -166,7 +166,6 @@ class DeckManager:
             "Hogwarts": 6,
             "802": 6
         }
-
         for name, image in jokerImages.items():
             price = priceMap.get(name, 5)
             sellPrice = max(2, price // 2)
